@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Framework, analyzers, and default test packages are inherited from tests/Directory.Build.props. -->
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Atya.Errors.Exceptions" />
+    <PackageReference Include="Atya.Governance.Testing" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ProblemDetails\ProblemDetails.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Atya.Build.Sdk">
   <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <UseAppHost>false</UseAppHost>
@@ -9,21 +9,17 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>
-
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Atya.Errors.Exceptions" />
     <PackageReference Include="BenchmarkDotNet" />
     <PackageReference Include="BenchmarkDotNet.Annotations" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\ProblemDetails\ProblemDetails.csproj">
       <AdditionalProperties>Configuration=Release</AdditionalProperties>
     </ProjectReference>
   </ItemGroup>
-
 </Project>

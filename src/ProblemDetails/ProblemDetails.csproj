@@ -1,14 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Atya.Build.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>Atya.Errors.ProblemDetails</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
     <PackageId>Atya.Errors.ProblemDetails</PackageId>
+    <AssemblyName>Atya.Errors.ProblemDetails</AssemblyName>
     <RootNamespace>Atya.Errors.ProblemDetails</RootNamespace>
     <IsPackable>true</IsPackable>
+    <Authors>Arsen Asulyan</Authors>
+    <Copyright>Copyright (c) 2026 Arsen Asulyan</Copyright>
+    <Description>Problem Details helpers for ASP.NET Core Atya services.</Description>
+    <PackageTags>dotnet;errors;problem-details;aspnetcore;atya</PackageTags>
+    <RepositoryUrl>https://github.com/AtyaLibraries/ProblemDetails</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <NoWarn>$(NoWarn);RS0026;SA1611;SA1615;SA1313</NoWarn>
 
     <!-- MinVer derives the version from git tags (e.g. tag `v1.2.3` -> 1.2.3). -->
-    <MinVerTagPrefix>v</MinVerTagPrefix>
     <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
   </PropertyGroup>
 
@@ -17,16 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 
-  <ItemGroup Label="Analyzers + versioning (build-only, not published)">
+  <ItemGroup Label="Runtime dependencies">
     <PackageReference Include="Atya.Errors.Exceptions" />
     <PackageReference Include="Atya.Foundation.Guards" />
-    <PackageReference Include="Atya.Governance.CodeQuality" PrivateAssets="all" />
-    <PackageReference Include="MinVer" PrivateAssets="all" Condition="'$(RepositoryHasGitDirectory)' == 'true'" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" Condition="'$(RepositoryHasGitDirectory)' == 'true'" />
   </ItemGroup>
 
 </Project>

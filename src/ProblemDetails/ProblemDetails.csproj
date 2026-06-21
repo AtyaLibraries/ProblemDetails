@@ -6,6 +6,7 @@
     <AssemblyName>Atya.Errors.ProblemDetails</AssemblyName>
     <RootNamespace>Atya.Errors.ProblemDetails</RootNamespace>
     <IsPackable>true</IsPackable>
+    <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
     <Authors>Arsen Asulyan</Authors>
     <Copyright>Copyright (c) 2026 Arsen Asulyan</Copyright>
     <Description>Problem Details helpers for ASP.NET Core Atya services.</Description>

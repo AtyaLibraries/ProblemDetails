@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net10.0": {
+      "Atya.Errors.Exceptions": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "sO2d1REbj3mLCFHHsltjZHpMQY8G2wJZANjIzS9XUSd8OgpoSe4O4pHINURwTu89151vhFK/A96I2qjgEdxzUQ==",
+        "dependencies": {
+          "Atya.Foundation.Guards": "1.0.0"
+        }
+      },
+      "Atya.Errors.ProblemDetails": {
+        "type": "Project",
+        "dependencies": {
+          "Atya.Errors.Exceptions": "[1.0.0, )",
+          "Atya.Foundation.Guards": "[1.0.0, )"
+        }
+      },
+      "Atya.Foundation.Guards": {
+        "type": "CentralTransitive",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "hLGlr7iPEAVMFEzNf2yGxEuJld/UGwBuC16TGyw3EGYrTQYf1ub3y24eoiFB4BGLQQDw1ll9hPoAdgVdJQEifQ=="
+      }
+    }
+  }
+}

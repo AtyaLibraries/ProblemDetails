@@ -1,7 +1,10 @@
-{
+﻿{
   "sdk": {
     "version": "10.0.202",
-    "rollForward": "latestPatch",
+    "rollForward": "disable",
     "allowPrerelease": false
+  },
+  "msbuild-sdks": {
+    "Atya.Build.Sdk": "1.3.0"
   }
 }

@@ -52,7 +52,7 @@ public sealed class AtyaProblemDetailsExceptionHandlerTests
         var httpContext = CreateHttpContext();
         var exception = new InvalidOperationException("boom");
 
-        var result = await handler.TryHandleAsync(httpContext, exception, CancellationToken.None);
+        var result = await handler.TryHandleAsync(httpContext, exception, TestContext.Current.CancellationToken);
 
         result.Should().BeTrue();
         mapper.LastException.Should().BeSameAs(exception);
@@ -82,7 +82,7 @@ public sealed class AtyaProblemDetailsExceptionHandlerTests
         var httpContext = CreateHttpContext();
         var exception = new InvalidOperationException("boom");
 
-        var result = await handler.TryHandleAsync(httpContext, exception, CancellationToken.None);
+        var result = await handler.TryHandleAsync(httpContext, exception, TestContext.Current.CancellationToken);
 
         result.Should().BeTrue();
         httpContext.Response.StatusCode.Should().Be(StatusCodes.Status409Conflict);
@@ -90,7 +90,7 @@ public sealed class AtyaProblemDetailsExceptionHandlerTests
 
         httpContext.Response.Body.Position = 0;
         using var reader = new StreamReader(httpContext.Response.Body, Encoding.UTF8);
-        var responseBody = await reader.ReadToEndAsync();
+        var responseBody = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
 
         JsonAssert.Equal(
             """
@@ -128,11 +128,11 @@ public sealed class AtyaProblemDetailsExceptionHandlerTests
         var httpContext = CreateHttpContext();
         var exception = new InvalidOperationException("boom");
 
-        _ = await handler.TryHandleAsync(httpContext, exception, CancellationToken.None);
+        _ = await handler.TryHandleAsync(httpContext, exception, TestContext.Current.CancellationToken);
 
         httpContext.Response.Body.Position = 0;
         using var reader = new StreamReader(httpContext.Response.Body, Encoding.UTF8);
-        var responseBody = await reader.ReadToEndAsync();
+        var responseBody = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
 
         JsonAssert.Equal(
             """
@@ -161,7 +161,7 @@ public sealed class AtyaProblemDetailsExceptionHandlerTests
         var service = new FakeProblemDetailsService(shouldWrite: true);
         var handler = new AtyaProblemDetailsExceptionHandler(mapper, service);
 
-        var act = async () => await handler.TryHandleAsync(null!, new InvalidOperationException("boom"), CancellationToken.None);
+        var act = async () => await handler.TryHandleAsync(null!, new InvalidOperationException("boom"), TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<ArgumentNullException>();
     }
@@ -174,7 +174,7 @@ public sealed class AtyaProblemDetailsExceptionHandlerTests
         var handler = new AtyaProblemDetailsExceptionHandler(mapper, service);
         var httpContext = CreateHttpContext();
 
-        var act = async () => await handler.TryHandleAsync(httpContext, null!, CancellationToken.None);
+        var act = async () => await handler.TryHandleAsync(httpContext, null!, TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<ArgumentNullException>();
     }

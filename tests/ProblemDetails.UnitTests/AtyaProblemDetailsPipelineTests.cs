@@ -21,10 +21,10 @@ public sealed class AtyaProblemDetailsPipelineTests
         using var host = await CreateHostAsync(static app =>
         {
             app.Run(_ => throw new InfrastructureException("Database password leaked."));
-        });
+        }, TestContext.Current.CancellationToken);
 
-        using var response = await host.GetTestClient().GetAsync("/");
-        var body = await response.Content.ReadAsStringAsync();
+        using var response = await host.GetTestClient().GetAsync("/", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.InternalServerError);
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
@@ -40,7 +40,9 @@ public sealed class AtyaProblemDetailsPipelineTests
         root.GetProperty("traceId").GetString().Should().NotBeNullOrWhiteSpace();
     }
 
-    private static async Task<IHost> CreateHostAsync(Action<IApplicationBuilder> configure)
+    private static async Task<IHost> CreateHostAsync(
+        Action<IApplicationBuilder> configure,
+        CancellationToken cancellationToken)
     {
         var host = new HostBuilder()
             .ConfigureWebHost(webBuilder =>
@@ -55,7 +57,7 @@ public sealed class AtyaProblemDetailsPipelineTests
             })
             .Build();
 
-        await host.StartAsync();
+        await host.StartAsync(cancellationToken);
 
         return host;
     }

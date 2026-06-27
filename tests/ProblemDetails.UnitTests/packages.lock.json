@@ -6,13 +6,13 @@
         "type": "Direct",
         "requested": "[1.0.0, )",
         "resolved": "1.0.0",
-        "contentHash": "8eJ5fmDO3KUiVRMQkRgtgWkHyyv92GzPeYQD4oNDjVE73H0wdRqdIB4GDwLGl5KAKVcnUMiptl+Kf8rNEqjx7Q=="
+        "contentHash": "sO2d1REbj3mLCFHHsltjZHpMQY8G2wJZANjIzS9XUSd8OgpoSe4O4pHINURwTu89151vhFK/A96I2qjgEdxzUQ=="
       },
       "Atya.Governance.Testing": {
         "type": "Direct",
         "requested": "[1.1.0, )",
         "resolved": "1.1.0",
-        "contentHash": "n9CXfkrO0SaQtz+MQTS6mpA86GPYDjMax72uMPNf38teJvVWZjAp6tiDvyUm2D+PpbYJ6apfX+UpFCrBWUQJnQ=="
+        "contentHash": "Ka6Kq9/HQlxVLUWvgxVXjT07FxwKAOWNcLmoPPkOGm9i27d7tOIRRrmK2MlKr8Kfi5x2EGYz56E21iVIytYMUw=="
       },
       "coverlet.collector": {
         "type": "Direct",
@@ -270,7 +270,7 @@
         "type": "CentralTransitive",
         "requested": "[1.0.0, )",
         "resolved": "1.0.0",
-        "contentHash": "RvOzSSZ0/O2Qmp43cUJ/M2XFYci9ZMgUvR4A9Wio0iMEDKkSuPfUGA9YCA785KN1nqP7KXquwh890GL/Rv02Zg=="
+        "contentHash": "hLGlr7iPEAVMFEzNf2yGxEuJld/UGwBuC16TGyw3EGYrTQYf1ub3y24eoiFB4BGLQQDw1ll9hPoAdgVdJQEifQ=="
       }
     }
   }

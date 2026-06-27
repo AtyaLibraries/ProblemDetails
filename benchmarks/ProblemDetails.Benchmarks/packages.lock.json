@@ -6,7 +6,10 @@
         "type": "Direct",
         "requested": "[1.0.0, )",
         "resolved": "1.0.0",
-        "contentHash": "sO2d1REbj3mLCFHHsltjZHpMQY8G2wJZANjIzS9XUSd8OgpoSe4O4pHINURwTu89151vhFK/A96I2qjgEdxzUQ=="
+        "contentHash": "sO2d1REbj3mLCFHHsltjZHpMQY8G2wJZANjIzS9XUSd8OgpoSe4O4pHINURwTu89151vhFK/A96I2qjgEdxzUQ==",
+        "dependencies": {
+          "Atya.Foundation.Guards": "1.0.0"
+        }
       },
       "BenchmarkDotNet": {
         "type": "Direct",

@@ -6,10 +6,7 @@
         "type": "Direct",
         "requested": "[1.0.0, )",
         "resolved": "1.0.0",
-        "contentHash": "sO2d1REbj3mLCFHHsltjZHpMQY8G2wJZANjIzS9XUSd8OgpoSe4O4pHINURwTu89151vhFK/A96I2qjgEdxzUQ==",
-        "dependencies": {
-          "Atya.Foundation.Guards": "1.0.0"
-        }
+        "contentHash": "pEZTVOu8/EM9H5fwRlRWSjv8fTfULkDuDWYAiDG4x//YYxMnsL/uld06u3eVRgxsA97/FSeqYIhmcKlSQpFKwg=="
       },
       "Atya.Foundation.Guards": {
         "type": "Direct",
@@ -19,9 +16,9 @@
       },
       "Atya.Governance.CodeQuality": {
         "type": "Direct",
-        "requested": "[1.0.0, )",
-        "resolved": "1.0.0",
-        "contentHash": "NXYX/0pQhIkzX9KB/p+Np7H+6Z+qgyElRCGGQ20/HX1G6Vnf6Y7KNkqGlVIWiAcjcY3SEV/eP3/Vrl+bjve8Ww=="
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "vWSyW0u93lQTDN32fJmPBL+8vPcPCUxkM5nJ+lKFlAjrA0KhDQN8Gg/CQwxrUgVQ4mnDy8oIo9wrA0DXLqFykg=="
       },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",

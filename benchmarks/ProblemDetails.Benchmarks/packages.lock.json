@@ -6,7 +6,7 @@
         "type": "Direct",
         "requested": "[1.0.0, )",
         "resolved": "1.0.0",
-        "contentHash": "pEZTVOu8/EM9H5fwRlRWSjv8fTfULkDuDWYAiDG4x//YYxMnsL/uld06u3eVRgxsA97/FSeqYIhmcKlSQpFKwg=="
+        "contentHash": "8eJ5fmDO3KUiVRMQkRgtgWkHyyv92GzPeYQD4oNDjVE73H0wdRqdIB4GDwLGl5KAKVcnUMiptl+Kf8rNEqjx7Q=="
       },
       "BenchmarkDotNet": {
         "type": "Direct",
@@ -138,7 +138,7 @@
         "type": "CentralTransitive",
         "requested": "[1.0.0, )",
         "resolved": "1.0.0",
-        "contentHash": "hLGlr7iPEAVMFEzNf2yGxEuJld/UGwBuC16TGyw3EGYrTQYf1ub3y24eoiFB4BGLQQDw1ll9hPoAdgVdJQEifQ=="
+        "contentHash": "RvOzSSZ0/O2Qmp43cUJ/M2XFYci9ZMgUvR4A9Wio0iMEDKkSuPfUGA9YCA785KN1nqP7KXquwh890GL/Rv02Zg=="
       }
     }
   }

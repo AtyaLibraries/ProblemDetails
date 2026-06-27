@@ -1,8 +1,7 @@
-<Project Sdk="Atya.Build.Sdk">
+﻿<Project Sdk="Atya.Build.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
-  <!-- Framework, analyzers, and default test packages are inherited from tests/Directory.Build.props. -->
+  <!-- Framework, analyzers, and default test packages are provided by Atya.Build.Sdk. -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

@@ -14,9 +14,11 @@ namespace Atya.Errors.ProblemDetails.Options;
 /// <param name="Title">The default problem title.</param>
 /// <param name="Type">The default problem type URI.</param>
 /// <param name="DetailFactory">An optional safe detail factory for the mapped exception.</param>
+#pragma warning disable SA1313 // Positional record parameters define PascalCase public API properties.
 public sealed record ExceptionProblemDetailsMapping(
     Type ExceptionType,
     int StatusCode,
     string Title,
     string Type,
     Func<Exception, HttpContext, string?>? DetailFactory = null);
+#pragma warning restore SA1313

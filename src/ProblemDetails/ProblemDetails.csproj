@@ -5,6 +5,7 @@
     <AssemblyName>Atya.Errors.ProblemDetails</AssemblyName>
     <RootNamespace>Atya.Errors.ProblemDetails</RootNamespace>
     <IsPackable>true</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
     <Authors>Arsen Asulyan</Authors>
     <Company>Atya</Company>
@@ -34,3 +35,4 @@
   </ItemGroup>
 
 </Project>
+

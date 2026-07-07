@@ -12,8 +12,14 @@ using AspNetProblemDetails = Microsoft.AspNetCore.Mvc.ProblemDetails;
 
 namespace ProblemDetails.Samples.ConsoleApp;
 
+/// <summary>
+/// Runs the Atya.Errors.ProblemDetails console sample.
+/// </summary>
 public static class Program
 {
+    /// <summary>
+    /// Demonstrates mapping an exception to ASP.NET Core problem details.
+    /// </summary>
     public static void Main()
     {
         ServiceCollection services = new();

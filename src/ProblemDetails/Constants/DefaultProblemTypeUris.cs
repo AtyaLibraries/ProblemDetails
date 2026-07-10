@@ -10,6 +10,11 @@ namespace Atya.Errors.ProblemDetails.Constants;
 public static class DefaultProblemTypeUris
 {
     /// <summary>
+    /// The default problem type URI for general Results failures.
+    /// </summary>
+    public const string Failure = "urn:atya:problem-type:failure";
+
+    /// <summary>
     /// The default problem type URI for validation failures.
     /// </summary>
     public const string Validation = "urn:atya:problem-type:validation";

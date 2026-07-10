@@ -11,6 +11,7 @@ public sealed class DefaultProblemTypeUrisTests
     [Fact]
     public void All_Constants_Should_Have_Expected_Values()
     {
+        DefaultProblemTypeUris.Failure.Should().Be("urn:atya:problem-type:failure");
         DefaultProblemTypeUris.Validation.Should().Be("urn:atya:problem-type:validation");
         DefaultProblemTypeUris.BusinessRuleViolation.Should().Be("urn:atya:problem-type:business-rule-violation");
         DefaultProblemTypeUris.Unauthorized.Should().Be("urn:atya:problem-type:unauthorized");

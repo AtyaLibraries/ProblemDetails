@@ -11,7 +11,8 @@ package.
 
 This package provides RFC 9457-style ASP.NET Core error responses and exception
 mapping at the HTTP boundary. It depends on `Atya.Errors.Exceptions` for the
-core exception taxonomy.
+core exception taxonomy and on `Atya.Foundation.Results` for Result/Error
+mapping.
 
 ## Consumer documentation
 
@@ -25,8 +26,10 @@ versioning, and support guidance.
 - `AddAtyaProblemDetails`
 - `UseAtyaProblemDetails`
 - `IExceptionToProblemDetailsMapper`
+- `IResultToProblemDetailsMapper`
 - `AtyaProblemDetailsOptions`
 - `ExceptionProblemDetailsMapping`
+- `ErrorProblemDetailsMapping`
 - `ValidationProblemError`
 
 ## Layout

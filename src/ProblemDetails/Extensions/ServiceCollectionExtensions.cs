@@ -40,6 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddExceptionHandler<AtyaProblemDetailsExceptionHandler>();
 
         services.TryAddSingleton<IExceptionToProblemDetailsMapper, DefaultExceptionToProblemDetailsMapper>();
+        services.TryAddSingleton<IResultToProblemDetailsMapper, DefaultResultToProblemDetailsMapper>();
 
         return services;
     }

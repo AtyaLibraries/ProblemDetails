@@ -17,6 +17,12 @@
         "resolved": "1.0.0",
         "contentHash": "hLGlr7iPEAVMFEzNf2yGxEuJld/UGwBuC16TGyw3EGYrTQYf1ub3y24eoiFB4BGLQQDw1ll9hPoAdgVdJQEifQ=="
       },
+      "Atya.Foundation.Results": {
+        "type": "Direct",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "7u4kPGnVubYn10agEOOxfMbN6GRLXpdtAMSCcCDvnNhSx4tdhrdrNf2AXKdNX+GP0Ekm6PSTsWlHMuZYMdFUYQ=="
+      },
       "Atya.Governance.CodeQuality": {
         "type": "Direct",
         "requested": "[1.1.0, )",

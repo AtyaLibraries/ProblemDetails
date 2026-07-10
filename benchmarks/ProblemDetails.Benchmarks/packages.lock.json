@@ -134,7 +134,8 @@
         "type": "Project",
         "dependencies": {
           "Atya.Errors.Exceptions": "[1.0.0, )",
-          "Atya.Foundation.Guards": "[1.0.0, )"
+          "Atya.Foundation.Guards": "[1.0.0, )",
+          "Atya.Foundation.Results": "[1.1.0, )"
         }
       },
       "Atya.Foundation.Guards": {
@@ -142,6 +143,12 @@
         "requested": "[1.0.0, )",
         "resolved": "1.0.0",
         "contentHash": "hLGlr7iPEAVMFEzNf2yGxEuJld/UGwBuC16TGyw3EGYrTQYf1ub3y24eoiFB4BGLQQDw1ll9hPoAdgVdJQEifQ=="
+      },
+      "Atya.Foundation.Results": {
+        "type": "CentralTransitive",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "7u4kPGnVubYn10agEOOxfMbN6GRLXpdtAMSCcCDvnNhSx4tdhrdrNf2AXKdNX+GP0Ekm6PSTsWlHMuZYMdFUYQ=="
       }
     }
   }

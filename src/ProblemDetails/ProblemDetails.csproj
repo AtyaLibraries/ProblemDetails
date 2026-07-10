@@ -32,6 +32,7 @@
   <ItemGroup Label="Runtime dependencies">
     <PackageReference Include="Atya.Errors.Exceptions" />
     <PackageReference Include="Atya.Foundation.Guards" />
+    <PackageReference Include="Atya.Foundation.Results" />
   </ItemGroup>
 
 </Project>

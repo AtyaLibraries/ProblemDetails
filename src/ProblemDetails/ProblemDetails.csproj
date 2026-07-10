@@ -5,6 +5,7 @@
     <AssemblyName>Atya.Errors.ProblemDetails</AssemblyName>
     <RootNamespace>Atya.Errors.ProblemDetails</RootNamespace>
     <IsPackable>true</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
     <Authors>Arsen Asulyan</Authors>
     <Company>Atya</Company>
@@ -31,6 +32,8 @@
   <ItemGroup Label="Runtime dependencies">
     <PackageReference Include="Atya.Errors.Exceptions" />
     <PackageReference Include="Atya.Foundation.Guards" />
+    <PackageReference Include="Atya.Foundation.Results" />
   </ItemGroup>
 
 </Project>
+

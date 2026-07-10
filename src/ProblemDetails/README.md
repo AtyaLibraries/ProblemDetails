@@ -1,7 +1,8 @@
 # Atya.Errors.ProblemDetails
 
 `Atya.Errors.ProblemDetails` adds RFC 9457-style ASP.NET Core problem details
-responses for the exception types in `Atya.Errors.Exceptions`.
+responses for the exception types in `Atya.Errors.Exceptions` and failed
+Result values from `Atya.Foundation.Results`.
 
 It is intended for API boundaries where production services need consistent
 HTTP status codes, stable problem type identifiers, trace/correlation metadata,
@@ -18,7 +19,8 @@ dotnet add package Atya.Errors.ProblemDetails
 - Targets `net10.0`.
 - Requires ASP.NET Core through the `Microsoft.AspNetCore.App` framework
   reference.
-- Depends on `Atya.Errors.Exceptions` and `Atya.Foundation.Guards`.
+- Depends on `Atya.Errors.Exceptions`, `Atya.Foundation.Guards`, and
+  `Atya.Foundation.Results`.
 
 ## Quick Start
 
@@ -86,7 +88,7 @@ is not configured.
 | `correlationId` | `CorrelationIdAccessor` returns a non-empty value. The default reads `X-Correlation-ID`. |
 | `errorCode` | `IncludeErrorCode` is `true` and the exception has an Atya error code. |
 | `metadata` | `IncludeExceptionMetadata` is `true` and the exception has metadata. |
-| `errors` | The exception is an `Atya.Errors.Exceptions.ValidationException`. |
+| `errors` | The exception is an `Atya.Errors.Exceptions.ValidationException`, or a mapped Results error has `Kind` = `Validation` on itself or any child detail. |
 
 Validation errors use this shape:
 
@@ -100,6 +102,66 @@ Validation errors use this shape:
 
 Attempted values are omitted by default because they can contain sensitive user
 input.
+
+Failed Results validation errors use an object keyed by `Error.Target`. Multiple
+errors for the same target are preserved in order. A targetless validation error
+uses an empty-string key.
+
+```json
+{
+  "Email": [
+    {
+      "propertyName": "Email",
+      "message": "Email is required.",
+      "errorCode": "validation.required"
+    }
+  ]
+}
+```
+
+## Results Mapping
+
+`IResultToProblemDetailsMapper` maps failed `Result`, failed `Result<TValue>`,
+or an `Error` directly to `Microsoft.AspNetCore.Mvc.ProblemDetails`. Successful
+results are not errors and throw `InvalidOperationException` when passed to the
+mapper.
+
+```csharp
+using Atya.Errors.ProblemDetails.Abstractions;
+using Atya.Foundation.Results;
+
+app.MapGet("/customers/{id}", (
+    Guid id,
+    HttpContext httpContext,
+    IResultToProblemDetailsMapper mapper) =>
+{
+    Result result = Result.Failure(new Error(
+        "customers.not_found",
+        $"Customer '{id}' was not found.",
+        ErrorKind.NotFound));
+
+    return result.IsSuccess
+        ? Results.NoContent()
+        : Results.Problem(mapper.Map(result, httpContext));
+});
+```
+
+Default Results error-kind mappings are:
+
+| ErrorKind | Status | Title | Type |
+| --- | ---: | --- | --- |
+| `Validation` | 400 | `Bad Request` | `urn:atya:problem-type:validation` |
+| `Failure` | 422 | `Unprocessable Entity` | `urn:atya:problem-type:failure` |
+| `NotFound` | 404 | `Not Found` | `urn:atya:problem-type:not-found` |
+| `Conflict` | 409 | `Conflict` | `urn:atya:problem-type:conflict` |
+| `Unauthorized` | 401 | `Unauthorized` | `urn:atya:problem-type:unauthorized` |
+| `Forbidden` | 403 | `Forbidden` | `urn:atya:problem-type:forbidden` |
+| `Unexpected` | 500 | `Internal Server Error` | `urn:atya:problem-type:internal-server-error` |
+
+`ErrorKind.Failure` maps to 422 by default because it represents an expected
+operation failure for a syntactically valid request that the service understood
+but could not process as requested. Use `MapError` when a service needs a
+different public contract for its own failure category.
 
 ## Configuration
 
@@ -120,6 +182,13 @@ builder.Services.AddAtyaProblemDetails(options =>
         "Gateway Timeout",
         "urn:atya:problem-type:gateway-timeout",
         static (_, _) => "The upstream service did not respond in time.");
+
+    // Remap the default ErrorKind.Failure contract for this service.
+    options.MapError(
+        ErrorKind.Failure,
+        StatusCodes.Status400BadRequest,
+        "Bad Request",
+        "urn:example:problem-type:invalid-command");
 
     options.ExtensionNames.Errors = "validationErrors";
     options.ExtensionNames.Metadata = null;

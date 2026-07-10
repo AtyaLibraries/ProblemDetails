@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using Atya.Errors.Exceptions;
 using Atya.Errors.ProblemDetails.Constants;
 using Atya.Foundation.Guards;
+using Atya.Foundation.Results;
 using Microsoft.AspNetCore.Http;
 
 namespace Atya.Errors.ProblemDetails.Options;
@@ -20,6 +21,8 @@ public sealed class AtyaProblemDetailsOptions
 
     private readonly List<ExceptionProblemDetailsMapping> _mappings = new List<ExceptionProblemDetailsMapping>();
     private readonly ReadOnlyCollection<ExceptionProblemDetailsMapping> _mappingsView;
+    private readonly List<ErrorProblemDetailsMapping> _errorMappings = new List<ErrorProblemDetailsMapping>();
+    private readonly ReadOnlyCollection<ErrorProblemDetailsMapping> _errorMappingsView;
     private Func<HttpContext, string?> _correlationIdAccessor = DefaultCorrelationIdAccessor;
     private Func<HttpContext, Exception, bool> _includeExceptionDetailsPredicate = static (_, _) => false;
 
@@ -29,13 +32,20 @@ public sealed class AtyaProblemDetailsOptions
     public AtyaProblemDetailsOptions()
     {
         _mappingsView = _mappings.AsReadOnly();
+        _errorMappingsView = _errorMappings.AsReadOnly();
         AddDefaultMappings();
+        AddDefaultErrorMappings();
     }
 
     /// <summary>
     /// Gets the configured exception mappings.
     /// </summary>
     public IReadOnlyList<ExceptionProblemDetailsMapping> Mappings => _mappingsView;
+
+    /// <summary>
+    /// Gets the configured Results error mappings.
+    /// </summary>
+    public IReadOnlyList<ErrorProblemDetailsMapping> ErrorMappings => _errorMappingsView;
 
     /// <summary>
     /// Gets the configured problem details extension member names.
@@ -156,6 +166,69 @@ public sealed class AtyaProblemDetailsOptions
         return this;
     }
 
+    /// <summary>
+    /// Adds or replaces a mapping for the given Results error kind.
+    /// </summary>
+    /// <param name="kind">The error kind.</param>
+    /// <param name="statusCode">The HTTP status code.</param>
+    /// <param name="title">The problem title.</param>
+    /// <param name="type">The problem type URI.</param>
+    /// <returns>The current options instance.</returns>
+    public AtyaProblemDetailsOptions MapError(ErrorKind kind, int statusCode, string title, string type)
+    {
+        return MapErrorCore(kind, statusCode, title, type, detailFactory: null);
+    }
+
+    /// <summary>
+    /// Adds or replaces a mapping for the given Results error kind with a safe detail factory.
+    /// </summary>
+    /// <param name="kind">The error kind.</param>
+    /// <param name="statusCode">The HTTP status code.</param>
+    /// <param name="title">The problem title.</param>
+    /// <param name="type">The problem type URI.</param>
+    /// <param name="detailFactory">A callback used to create the problem detail text.</param>
+    /// <returns>The current options instance.</returns>
+    public AtyaProblemDetailsOptions MapError(
+        ErrorKind kind,
+        int statusCode,
+        string title,
+        string type,
+        Func<Error, HttpContext, string?> detailFactory)
+    {
+        Guard.AgainstNull(detailFactory);
+
+        return MapErrorCore(kind, statusCode, title, type, detailFactory);
+    }
+
+    /// <summary>
+    /// Removes a mapping for the given Results error kind.
+    /// </summary>
+    /// <param name="kind">The error kind.</param>
+    /// <returns>The current options instance.</returns>
+    public AtyaProblemDetailsOptions RemoveErrorMapping(ErrorKind kind)
+    {
+        for (var i = _errorMappings.Count - 1; i >= 0; i--)
+        {
+            if (_errorMappings[i].Kind == kind)
+            {
+                _errorMappings.RemoveAt(i);
+            }
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// Removes all configured Results error mappings.
+    /// </summary>
+    /// <returns>The current options instance.</returns>
+    public AtyaProblemDetailsOptions ClearErrorMappings()
+    {
+        _errorMappings.Clear();
+
+        return this;
+    }
+
     private static string? DefaultCorrelationIdAccessor(HttpContext httpContext)
     {
         if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var values))
@@ -193,6 +266,25 @@ public sealed class AtyaProblemDetailsOptions
         _mappings.Insert(
             0,
             new ExceptionProblemDetailsMapping(typeof(TException), statusCode, title.Trim(), type.Trim(), detailFactory));
+
+        return this;
+    }
+
+    private AtyaProblemDetailsOptions MapErrorCore(
+        ErrorKind kind,
+        int statusCode,
+        string title,
+        string type,
+        Func<Error, HttpContext, string?>? detailFactory)
+    {
+        ValidateHttpStatusCode(statusCode);
+        Guard.AgainstNullOrWhiteSpace(title);
+        Guard.AgainstNullOrWhiteSpace(type);
+
+        _errorMappings.RemoveAll(mapping => mapping.Kind == kind);
+        _errorMappings.Insert(
+            0,
+            new ErrorProblemDetailsMapping(kind, statusCode, title.Trim(), type.Trim(), detailFactory));
 
         return this;
     }
@@ -246,5 +338,50 @@ public sealed class AtyaProblemDetailsOptions
             StatusCodes.Status500InternalServerError,
             "Internal Server Error",
             DefaultProblemTypeUris.Infrastructure));
+    }
+
+    private void AddDefaultErrorMappings()
+    {
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Validation,
+            StatusCodes.Status400BadRequest,
+            "Bad Request",
+            DefaultProblemTypeUris.Validation));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Failure,
+            StatusCodes.Status422UnprocessableEntity,
+            "Unprocessable Entity",
+            DefaultProblemTypeUris.Failure));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.NotFound,
+            StatusCodes.Status404NotFound,
+            "Not Found",
+            DefaultProblemTypeUris.NotFound));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Conflict,
+            StatusCodes.Status409Conflict,
+            "Conflict",
+            DefaultProblemTypeUris.Conflict));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Unauthorized,
+            StatusCodes.Status401Unauthorized,
+            "Unauthorized",
+            DefaultProblemTypeUris.Unauthorized));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Forbidden,
+            StatusCodes.Status403Forbidden,
+            "Forbidden",
+            DefaultProblemTypeUris.Forbidden));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Unexpected,
+            StatusCodes.Status500InternalServerError,
+            "Internal Server Error",
+            DefaultProblemTypeUris.Unhandled));
     }
 }

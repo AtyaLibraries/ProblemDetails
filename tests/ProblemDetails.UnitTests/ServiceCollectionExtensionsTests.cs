@@ -26,6 +26,7 @@ public sealed class ServiceCollectionExtensionsTests
 
         serviceProvider.GetRequiredService<IOptions<AtyaProblemDetailsOptions>>().Value.Should().NotBeNull();
         serviceProvider.GetRequiredService<IExceptionToProblemDetailsMapper>().Should().NotBeNull();
+        serviceProvider.GetRequiredService<IResultToProblemDetailsMapper>().Should().NotBeNull();
         serviceProvider.GetServices<IExceptionHandler>().Should().NotBeEmpty();
         serviceProvider.GetRequiredService<IProblemDetailsService>().Should().NotBeNull();
     }

@@ -13,14 +13,24 @@ using AspNetProblemDetails = Microsoft.AspNetCore.Mvc.ProblemDetails;
 
 namespace ProblemDetails.Benchmarks;
 
+/// <summary>
+/// Runs the Atya.Errors.ProblemDetails benchmark suite.
+/// </summary>
 public static class Program
 {
+    /// <summary>
+    /// Executes the benchmark suite.
+    /// </summary>
+    /// <param name="args">Command-line arguments passed to BenchmarkDotNet.</param>
     public static void Main(string[] args)
     {
         BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
     }
 }
 
+/// <summary>
+/// Benchmarks mapping known Atya exceptions to problem details.
+/// </summary>
 [MemoryDiagnoser]
 [RankColumn]
 [CategoriesColumn]
@@ -34,6 +44,9 @@ public class KnownExceptionMappingBenchmarks
     private ValidationException _validationException = null!;
     private ValidationException _validationExceptionWithMetadata = null!;
 
+    /// <summary>
+    /// Initializes known exception mapping benchmark state.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -65,6 +78,10 @@ public class KnownExceptionMappingBenchmarks
         });
     }
 
+    /// <summary>
+    /// Maps a not-found exception.
+    /// </summary>
+    /// <returns>The mapped problem details.</returns>
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("known")]
     public AspNetProblemDetails MapNotFoundException()
@@ -72,6 +89,10 @@ public class KnownExceptionMappingBenchmarks
         return _defaultMapper.Map(_notFoundException, _httpContext);
     }
 
+    /// <summary>
+    /// Maps a business-rule violation exception.
+    /// </summary>
+    /// <returns>The mapped problem details.</returns>
     [Benchmark]
     [BenchmarkCategory("known")]
     public AspNetProblemDetails MapBusinessRuleViolationException()
@@ -79,6 +100,10 @@ public class KnownExceptionMappingBenchmarks
         return _defaultMapper.Map(_businessRuleViolationException, _httpContext);
     }
 
+    /// <summary>
+    /// Maps a validation exception.
+    /// </summary>
+    /// <returns>The mapped problem details.</returns>
     [Benchmark]
     [BenchmarkCategory("validation")]
     public AspNetProblemDetails MapValidationException()
@@ -86,6 +111,10 @@ public class KnownExceptionMappingBenchmarks
         return _defaultMapper.Map(_validationException, _httpContext);
     }
 
+    /// <summary>
+    /// Maps a validation exception with metadata.
+    /// </summary>
+    /// <returns>The mapped problem details.</returns>
     [Benchmark]
     [BenchmarkCategory("validation")]
     public AspNetProblemDetails MapValidationExceptionWithMetadata()
@@ -106,6 +135,9 @@ public class KnownExceptionMappingBenchmarks
     }
 }
 
+/// <summary>
+/// Benchmarks mapping unhandled exceptions to problem details.
+/// </summary>
 [MemoryDiagnoser]
 [RankColumn]
 [CategoriesColumn]
@@ -116,6 +148,9 @@ public class UnhandledExceptionMappingBenchmarks
     private DefaultHttpContext _httpContext = null!;
     private InvalidOperationException _unhandledException = null!;
 
+    /// <summary>
+    /// Initializes unhandled exception mapping benchmark state.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -133,6 +168,10 @@ public class UnhandledExceptionMappingBenchmarks
         _unhandledException = new InvalidOperationException("Unexpected failure.");
     }
 
+    /// <summary>
+    /// Maps an unhandled exception without details.
+    /// </summary>
+    /// <returns>The mapped problem details.</returns>
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("unhandled")]
     public AspNetProblemDetails MapUnhandledExceptionSanitized()
@@ -140,6 +179,10 @@ public class UnhandledExceptionMappingBenchmarks
         return _sanitizedMapper.Map(_unhandledException, _httpContext);
     }
 
+    /// <summary>
+    /// Maps an unhandled exception with details enabled.
+    /// </summary>
+    /// <returns>The mapped problem details.</returns>
     [Benchmark]
     [BenchmarkCategory("unhandled")]
     public AspNetProblemDetails MapUnhandledExceptionWithDetails()

@@ -51,7 +51,13 @@ public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblem
         var title = mapping?.Title ?? "Internal Server Error";
         var type = mapping?.Type ?? DefaultProblemTypeUris.Unhandled;
 
-        var detail = CreateDetail(exception, httpContext, mapping);
+        var detail = ProblemDetailsDetailPolicy.CreateDetail(
+            statusCode,
+            exception.Message,
+            exception,
+            httpContext,
+            mapping?.DetailFactory,
+            _options.IncludeExceptionDetailsPredicate);
 
         var problemDetails = new AspNetProblemDetails
         {
@@ -87,26 +93,6 @@ public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblem
         }
 
         return _options.Mappings.FirstOrDefault(mapping => mapping.ExceptionType.IsAssignableFrom(exceptionType));
-    }
-
-    private string? CreateDetail(Exception exception, HttpContext httpContext, ExceptionProblemDetailsMapping? mapping)
-    {
-        if (mapping?.DetailFactory is not null)
-        {
-            return mapping.DetailFactory(exception, httpContext);
-        }
-
-        if (mapping is not null && mapping.StatusCode < StatusCodes.Status500InternalServerError)
-        {
-            return exception.Message;
-        }
-
-        if (_options.IncludeExceptionDetailsPredicate(httpContext, exception))
-        {
-            return exception.Message;
-        }
-
-        return "An unexpected error occurred.";
     }
 
     private void AddExtensions(AspNetProblemDetails problemDetails, Exception exception, HttpContext httpContext)

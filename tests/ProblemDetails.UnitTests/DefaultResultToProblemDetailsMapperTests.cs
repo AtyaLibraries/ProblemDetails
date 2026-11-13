@@ -128,6 +128,110 @@ public sealed class DefaultResultToProblemDetailsMapperTests
     }
 
     [Fact]
+    public void Map_Should_Redact_Default_Unexpected_Error_Content()
+    {
+        const string marker = "ATYA014_SYNTHETIC_MARKER";
+        var mapper = CreateMapper();
+        var error = new Error(marker, marker, ErrorKind.Unexpected);
+
+        var problemDetails = mapper.Map(error, CreateHttpContext("/orders"));
+
+        problemDetails.Status.Should().Be(StatusCodes.Status500InternalServerError);
+        problemDetails.Detail.Should().Be("An unexpected error occurred.");
+        problemDetails.Extensions.Should().NotContainKey(ProblemDetailsExtensionNames.ErrorCode);
+    }
+
+    [Fact]
+    public void Map_Should_Not_Add_Error_Derived_Extensions_For_Server_Errors()
+    {
+        const string marker = "ATYA014_SYNTHETIC_EXTENSION_MARKER";
+        var options = new AtyaProblemDetailsOptions()
+            .MapError(
+                ErrorKind.Failure,
+                StatusCodes.Status503ServiceUnavailable,
+                "Service Unavailable",
+                "urn:test:service-unavailable");
+        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var error = new Error(
+            marker,
+            marker,
+            target: marker,
+            details:
+            [
+                new Error(marker, marker, marker, kind: ErrorKind.Validation),
+            ],
+            kind: ErrorKind.Failure);
+
+        var problemDetails = mapper.Map(error, CreateHttpContext("/orders"));
+
+        problemDetails.Extensions.Should().NotContainKey(ProblemDetailsExtensionNames.ErrorCode);
+        problemDetails.Extensions.Should().NotContainKey(ProblemDetailsExtensionNames.Errors);
+    }
+
+    [Theory]
+    [InlineData(StatusCodes.Status500InternalServerError)]
+    [InlineData(599)]
+    public void Map_Should_Redact_Representative_Server_Error_Boundaries(int statusCode)
+    {
+        const string marker = "ATYA014_SYNTHETIC_BOUNDARY_MARKER";
+        var options = new AtyaProblemDetailsOptions()
+            .MapError(ErrorKind.Failure, statusCode, "Server Error", "urn:test:server-error");
+        var mapper = new DefaultResultToProblemDetailsMapper(options);
+
+        var problemDetails = mapper.Map(
+            new Error("server.error", marker),
+            CreateHttpContext("/orders"));
+
+        problemDetails.Detail.Should().Be("An unexpected error occurred.");
+    }
+
+    [Fact]
+    public void Map_Should_Preserve_Explicit_Server_Error_Detail_Override_Only()
+    {
+        const string disclosedMarker = "ATYA014_REVIEWED_DETAIL";
+        const string extensionMarker = "ATYA014_HIDDEN_EXTENSION";
+        var options = new AtyaProblemDetailsOptions()
+            .MapError(
+                ErrorKind.Unexpected,
+                StatusCodes.Status500InternalServerError,
+                "Internal Server Error",
+                "urn:test:internal-server-error",
+                static (error, _) => error.Message);
+        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var error = new Error(
+            extensionMarker,
+            disclosedMarker,
+            target: null,
+            details:
+            [
+                new Error(extensionMarker, extensionMarker, extensionMarker, kind: ErrorKind.Validation),
+            ],
+            kind: ErrorKind.Unexpected);
+
+        var problemDetails = mapper.Map(error, CreateHttpContext("/orders"));
+
+        problemDetails.Detail.Should().Be(disclosedMarker);
+        problemDetails.Extensions.Should().NotContainKey(ProblemDetailsExtensionNames.ErrorCode);
+        problemDetails.Extensions.Should().NotContainKey(ProblemDetailsExtensionNames.Errors);
+    }
+
+    [Fact]
+    public void Map_Should_Preserve_Error_Content_For_Non_Server_Error()
+    {
+        const string marker = "ATYA014_SYNTHETIC_CLIENT_MARKER";
+        var options = new AtyaProblemDetailsOptions()
+            .MapError(ErrorKind.Failure, 499, "Client Error", "urn:test:client-error");
+        var mapper = new DefaultResultToProblemDetailsMapper(options);
+
+        var problemDetails = mapper.Map(
+            new Error(marker, marker),
+            CreateHttpContext("/orders"));
+
+        problemDetails.Detail.Should().Be(marker);
+        problemDetails.Extensions[ProblemDetailsExtensionNames.ErrorCode].Should().Be(marker);
+    }
+
+    [Fact]
     public void Map_Should_Add_Keyed_Errors_Extension_For_Validation_Error_Details()
     {
         var mapper = CreateMapper();

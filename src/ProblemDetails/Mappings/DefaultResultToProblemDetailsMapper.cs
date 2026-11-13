@@ -85,11 +85,16 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
             Status = statusCode,
             Title = title,
             Type = type,
-            Detail = mapping?.DetailFactory?.Invoke(resultError, httpContext) ?? resultError.Message,
+            Detail = ProblemDetailsDetailPolicy.CreateDetail(
+                statusCode,
+                resultError.Message,
+                resultError,
+                httpContext,
+                mapping?.DetailFactory),
             Instance = CreateInstance(httpContext),
         };
 
-        AddExtensions(problemDetails, resultError, httpContext);
+        AddExtensions(problemDetails, resultError, httpContext, statusCode);
 
         return problemDetails;
     }
@@ -149,7 +154,11 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
         return _options.ErrorMappings.FirstOrDefault(mapping => mapping.Kind == error.Kind);
     }
 
-    private void AddExtensions(AspNetProblemDetails problemDetails, Error error, HttpContext httpContext)
+    private void AddExtensions(
+        AspNetProblemDetails problemDetails,
+        Error error,
+        HttpContext httpContext,
+        int statusCode)
     {
         if (_options.IncludeTraceId)
         {
@@ -160,15 +169,18 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
         var correlationId = _options.CorrelationIdAccessor(httpContext);
         AddExtension(problemDetails, _options.ExtensionNames.CorrelationId, correlationId);
 
-        if (_options.IncludeErrorCode)
+        if (!ProblemDetailsDetailPolicy.IsServerError(statusCode) && _options.IncludeErrorCode)
         {
             AddExtension(problemDetails, _options.ExtensionNames.ErrorCode, error.Code);
         }
 
-        var validationErrors = CreateValidationErrors(error);
-        if (validationErrors.Count > 0)
+        if (!ProblemDetailsDetailPolicy.IsServerError(statusCode))
         {
-            AddExtension(problemDetails, _options.ExtensionNames.Errors, validationErrors);
+            var validationErrors = CreateValidationErrors(error);
+            if (validationErrors.Count > 0)
+            {
+                AddExtension(problemDetails, _options.ExtensionNames.Errors, validationErrors);
+            }
         }
 
         static void AddExtension(AspNetProblemDetails problemDetails, string? name, object? value)

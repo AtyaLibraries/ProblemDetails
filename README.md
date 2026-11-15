@@ -70,6 +70,4 @@ or `--filter *Unhandled*` to run a focused subset.
 ## Versioning
 
 Versions are derived from git tags via [MinVer](https://github.com/adamralph/minver).
-Merges to `master` publish stable NuGet packages through
-`.github/workflows/publish-nuget.yml`, which creates the version tag and GitHub
-Release after a successful publish.
+Releases are published by the central publisher, not by a workflow in this repository. After promoting `development` to `master` and tagging the `master` commit, a maintainer runs `gh workflow run publish.yml --repo AtyaLibraries/publisher -f repository=AtyaLibraries/ProblemDetails -f ref=<tag>`; see the publisher RUNBOOK (https://github.com/AtyaLibraries/publisher/blob/main/docs/RUNBOOK.md).

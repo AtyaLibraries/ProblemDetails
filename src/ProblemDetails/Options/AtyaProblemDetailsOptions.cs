@@ -23,7 +23,7 @@ public sealed class AtyaProblemDetailsOptions
     private readonly ReadOnlyCollection<ExceptionProblemDetailsMapping> _mappingsView;
     private readonly List<ErrorProblemDetailsMapping> _errorMappings = new List<ErrorProblemDetailsMapping>();
     private readonly ReadOnlyCollection<ErrorProblemDetailsMapping> _errorMappingsView;
-    private Func<HttpContext, string?> _correlationIdAccessor = DefaultCorrelationIdAccessor;
+    private Func<HttpContext, string?> _correlationIdAccessor = static _ => null;
     private Func<HttpContext, Exception, bool> _includeExceptionDetailsPredicate = static (_, _) => false;
 
     /// <summary>
@@ -91,8 +91,20 @@ public sealed class AtyaProblemDetailsOptions
     }
 
     /// <summary>
-    /// Gets or sets an optional customization callback for final problem details mutation.
+    /// Gets or sets a customization callback invoked after extensions are added, on both the exception and the result path.
+    /// A customizer may overwrite Atya extensions.
     /// </summary>
+    public Action<ProblemDetailsCustomizationContext>? Customize { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether mapped status codes outside 400-599 are accepted at startup.
+    /// </summary>
+    public bool AllowNonErrorStatusCodes { get; set; }
+
+    /// <summary>
+    /// Gets or sets an optional customization callback invoked on the exception path only.
+    /// </summary>
+    [Obsolete("Use Customize, which runs on both the exception and the result path. Removal is planned for the next major version.")]
     public Action<HttpContext, Exception, Microsoft.AspNetCore.Mvc.ProblemDetails>? CustomizeProblemDetails { get; set; }
 
     /// <summary>
@@ -227,17 +239,6 @@ public sealed class AtyaProblemDetailsOptions
         _errorMappings.Clear();
 
         return this;
-    }
-
-    private static string? DefaultCorrelationIdAccessor(HttpContext httpContext)
-    {
-        if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var values))
-        {
-            var value = values.ToString();
-            return string.IsNullOrWhiteSpace(value) ? null : value;
-        }
-
-        return null;
     }
 
     private static void ValidateHttpStatusCode(int statusCode)
@@ -377,6 +378,24 @@ public sealed class AtyaProblemDetailsOptions
             StatusCodes.Status403Forbidden,
             "Forbidden",
             DefaultProblemTypeUris.Forbidden));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.TooManyRequests,
+            StatusCodes.Status429TooManyRequests,
+            "Too Many Requests",
+            DefaultProblemTypeUris.TooManyRequests));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Unavailable,
+            StatusCodes.Status503ServiceUnavailable,
+            "Service Unavailable",
+            DefaultProblemTypeUris.ServiceUnavailable));
+
+        _errorMappings.Add(new ErrorProblemDetailsMapping(
+            ErrorKind.Timeout,
+            StatusCodes.Status504GatewayTimeout,
+            "Gateway Timeout",
+            DefaultProblemTypeUris.GatewayTimeout));
 
         _errorMappings.Add(new ErrorProblemDetailsMapping(
             ErrorKind.Unexpected,

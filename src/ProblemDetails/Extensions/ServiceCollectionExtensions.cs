@@ -4,11 +4,13 @@
 
 using Atya.Errors.ProblemDetails.Abstractions;
 using Atya.Errors.ProblemDetails.Handlers;
+using Atya.Errors.ProblemDetails.Internal;
 using Atya.Errors.ProblemDetails.Mappings;
 using Atya.Errors.ProblemDetails.Options;
 using Atya.Foundation.Guards;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Atya.Errors.ProblemDetails.Extensions;
 
@@ -29,7 +31,8 @@ public static class ServiceCollectionExtensions
     {
         Guard.AgainstNull(services);
 
-        services.AddOptions<AtyaProblemDetailsOptions>();
+        services.AddOptions<AtyaProblemDetailsOptions>().ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<AtyaProblemDetailsOptions>, ProblemDetailsOptionsValidator>());
 
         if (configure is not null)
         {

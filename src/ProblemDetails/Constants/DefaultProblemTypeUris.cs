@@ -58,4 +58,19 @@ public static class DefaultProblemTypeUris
     /// The default problem type URI for unhandled exceptions.
     /// </summary>
     public const string Unhandled = "urn:atya:problem-type:internal-server-error";
+
+    /// <summary>
+    /// The problem type for rate limited requests.
+    /// </summary>
+    public const string TooManyRequests = "urn:atya:problem-type:too-many-requests";
+
+    /// <summary>
+    /// The problem type for an unavailable service.
+    /// </summary>
+    public const string ServiceUnavailable = "urn:atya:problem-type:service-unavailable";
+
+    /// <summary>
+    /// The problem type for an upstream timeout.
+    /// </summary>
+    public const string GatewayTimeout = "urn:atya:problem-type:gateway-timeout";
 }

@@ -56,4 +56,20 @@ public sealed class ProblemDetailsExtensionNameOptions
     /// Gets or sets the validation attempted value member.
     /// </summary>
     public string? ValidationAttemptedValue { get; set; } = "attemptedValue";
+
+    internal ProblemDetailsExtensionNameOptions Clone()
+    {
+        return new ProblemDetailsExtensionNameOptions
+        {
+            TraceId = TraceId,
+            CorrelationId = CorrelationId,
+            ErrorCode = ErrorCode,
+            Errors = Errors,
+            Metadata = Metadata,
+            ValidationPropertyName = ValidationPropertyName,
+            ValidationMessage = ValidationMessage,
+            ValidationErrorCode = ValidationErrorCode,
+            ValidationAttemptedValue = ValidationAttemptedValue,
+        };
+    }
 }

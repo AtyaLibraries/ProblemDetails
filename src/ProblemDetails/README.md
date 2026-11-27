@@ -84,8 +84,8 @@ is not configured.
 
 | Extension | Included when |
 | --- | --- |
-| `traceId` | `IncludeTraceId` is `true` and ASP.NET Core has a trace identifier. |
-| `correlationId` | `CorrelationIdAccessor` returns a non-empty value. The default reads `X-Correlation-ID`. |
+| `traceId` | `IncludeTraceId` is `true`. The value is the 32-character W3C trace id of `Activity.Current` (no `00-` prefix, span id or flags); without a W3C activity it is `HttpContext.TraceIdentifier`. A hierarchical `Activity.Id` is never emitted. |
+| `correlationId` | `CorrelationIdAccessor` returns a non-empty value. The default returns `null`: `Atya.Web.Middleware` wires the accessor to the validated correlation id; used alone, set it yourself. |
 | `errorCode` | `IncludeErrorCode` is `true` and the exception has an Atya error code. |
 | `metadata` | `IncludeExceptionMetadata` is `true` and the exception has metadata. |
 | `errors` | The exception is an `Atya.Errors.Exceptions.ValidationException`, or a mapped Results error has `Kind` = `Validation` on itself or any child detail. |
@@ -230,16 +230,24 @@ builder.Services.AddAtyaProblemDetails(options =>
     options.ExtensionNames.Errors = "validationErrors";
     options.ExtensionNames.Metadata = null;
 
-    options.CustomizeProblemDetails = (httpContext, exception, problemDetails) =>
+    // Runs for exceptions and for failed Results, after the Atya extensions are added.
+    // context.Exception is set on the exception path, context.Error on the result path.
+    options.Customize = context =>
     {
-        problemDetails.Extensions["service"] = "orders-api";
+        context.ProblemDetails.Extensions["service"] = "orders-api";
     };
 });
 ```
 
 `Map<TException>` replaces an existing mapping for the same exception type,
 trims the title and type values, and rejects HTTP status codes outside the
-standard `100` through `599` range. `RemoveMapping<TException>()` removes one
+standard `100` through `599` range. At host start every mapped status must be
+`400` through `599` unless `AllowNonErrorStatusCodes` is set, and extension
+names must be distinct and must not be RFC 9457 members (`type`, `title`,
+`status`, `detail`, `instance`); a `null` extension name disables that extension.
+Mappers snapshot the options when they are constructed, so later changes to the
+options object do not affect them. When several exception mappings apply, the most
+specific (deepest) type wins, independent of registration order. `RemoveMapping<TException>()` removes one
 mapping, and `ClearMappings()` lets a service fully own its public error
 contract.
 
@@ -282,3 +290,18 @@ Report issues through the repository at
 https://github.com/AtyaLibraries/ProblemDetails. Include the package version,
 target framework, ASP.NET Core version, and a minimal reproduction whenever
 possible.
+
+## Migration from 1.x
+
+- `DefaultExceptionToProblemDetailsMapper` and `DefaultResultToProblemDetailsMapper` have one public
+  constructor (`IOptions<AtyaProblemDetailsOptions>`). Use `Create(AtyaProblemDetailsOptions)` for tests
+  and manual composition. Registering both the concrete options type and `IOptions<>` no longer breaks DI.
+- `traceId` is now the 32-hex W3C trace id instead of the full `traceparent` value (wire-visible).
+- The default `CorrelationIdAccessor` no longer reads `X-Correlation-ID`; use `Atya.Web.Middleware` or set the accessor.
+- `Customize` (new) runs on both paths; `CustomizeProblemDetails` is obsolete and runs on the exception path only.
+- New default rows: `ErrorKind.TooManyRequests` 429, `ErrorKind.Unavailable` 503 and `ErrorKind.Timeout` 504
+  (503/504 detail and error code are masked like other 5xx). No `Retry-After` is emitted.
+- Requires `Atya.Foundation.Results` 1.2.0. Because `ErrorKind` gained values, exhaustive `switch` expressions over it in
+  consumer code need new arms.
+- Mapped status codes outside 400-599 fail startup unless `AllowNonErrorStatusCodes` is set; mapping outcomes can change
+  for apps that depended on registration order.

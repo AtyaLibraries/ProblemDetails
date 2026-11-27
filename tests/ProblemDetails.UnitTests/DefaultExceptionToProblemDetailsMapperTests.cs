@@ -18,7 +18,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
     [Fact]
     public void Constructor_Should_Throw_When_Options_Is_Null()
     {
-        var act = () => new DefaultExceptionToProblemDetailsMapper((AtyaProblemDetailsOptions)null!);
+        var act = () => DefaultExceptionToProblemDetailsMapper.Create(null!);
 
         act.Should().Throw<ArgumentNullException>();
     }
@@ -160,7 +160,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
             CorrelationIdAccessor = _ => correlationIdAccessor.CorrelationId,
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ConflictException("Customer already exists.", "customer.conflict");
 
@@ -177,7 +177,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
             IncludeExceptionMetadata = true
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
 
         var exception = new ConflictException(
@@ -207,7 +207,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
             CorrelationIdAccessor = static _ => " "
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ConflictException(
             "Customer already exists.",
@@ -234,7 +234,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
                 "Gone",
                 "urn:test:not-found-overridden");
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers/42");
         var exception = new NotFoundException("Customer was not found.");
 
@@ -255,7 +255,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
                 "urn:test:service-unavailable",
                 static (_, httpContext) => $"Safe detail for {httpContext.Request.Path.Value}");
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new InfrastructureException("Database password leaked.");
 
@@ -300,7 +300,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
             IncludeExceptionDetailsPredicate = static (_, _) => true
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new InvalidOperationException("Sensitive internal details.");
 
@@ -312,6 +312,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
     [Fact]
     public void Map_Should_Allow_Final_Customization()
     {
+#pragma warning disable CS0618 // The obsolete sugar must keep working in 2.0.
         var options = new AtyaProblemDetailsOptions
         {
             CustomizeProblemDetails = static (_, _, problemDetails) =>
@@ -319,8 +320,9 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
                 problemDetails.Extensions["custom"] = "value";
             }
         };
+#pragma warning restore CS0618
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ForbiddenException("Forbidden.");
 
@@ -331,7 +333,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperTests
 
     private static DefaultExceptionToProblemDetailsMapper CreateMapper()
     {
-        return new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        return DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
     }
 
     private static DefaultHttpContext CreateHttpContext(string path)

@@ -48,7 +48,7 @@ public sealed class AtyaProblemDetailsExceptionHandler : IExceptionHandler
             HttpContext = httpContext,
             ProblemDetails = problemDetails,
             Exception = exception,
-        });
+        }).ConfigureAwait(false);
 
         if (written)
         {
@@ -58,7 +58,7 @@ public sealed class AtyaProblemDetailsExceptionHandler : IExceptionHandler
         httpContext.Response.ContentType = "application/problem+json";
         await httpContext.Response.WriteAsync(
             JsonSerializer.Serialize(problemDetails, s_jsonSerializerOptions),
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
 
         return true;
     }

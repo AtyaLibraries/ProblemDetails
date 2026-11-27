@@ -18,7 +18,11 @@ public sealed class AtyaProblemDetailsOptionsAdditionalTests
         options.IncludeErrorCode.Should().BeTrue();
         options.IncludeExceptionMetadata.Should().BeFalse();
         options.IncludeValidationAttemptedValues.Should().BeFalse();
+        options.Customize.Should().BeNull();
+        options.AllowNonErrorStatusCodes.Should().BeFalse();
+#pragma warning disable CS0618 // Obsolete sugar is still null by default.
         options.CustomizeProblemDetails.Should().BeNull();
+#pragma warning restore CS0618
     }
 
     [Fact]
@@ -61,7 +65,7 @@ public sealed class AtyaProblemDetailsOptionsAdditionalTests
     }
 
     [Fact]
-    public void CorrelationIdAccessor_Should_Return_Header_Value_When_Present()
+    public void CorrelationIdAccessor_Should_Not_Read_The_Request_Header_By_Default()
     {
         var options = new AtyaProblemDetailsOptions();
         var httpContext = new DefaultHttpContext();
@@ -69,7 +73,7 @@ public sealed class AtyaProblemDetailsOptionsAdditionalTests
 
         var correlationId = options.CorrelationIdAccessor(httpContext);
 
-        correlationId.Should().Be("corr-456");
+        correlationId.Should().BeNull("the accessor is wired by Atya.Web.Middleware; no X-Correlation-ID literal remains here");
     }
 
     [Fact]

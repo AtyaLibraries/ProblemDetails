@@ -17,7 +17,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
     [Fact]
     public void Constructor_Should_Throw_When_Options_Is_Null()
     {
-        var act = () => new DefaultResultToProblemDetailsMapper((AtyaProblemDetailsOptions)null!);
+        var act = () => DefaultResultToProblemDetailsMapper.Create(null!);
 
         act.Should().Throw<ArgumentNullException>();
     }
@@ -151,7 +151,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
                 StatusCodes.Status503ServiceUnavailable,
                 "Service Unavailable",
                 "urn:test:service-unavailable");
-        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var mapper = DefaultResultToProblemDetailsMapper.Create(options);
         var error = new Error(
             marker,
             marker,
@@ -176,7 +176,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
         const string marker = "ATYA014_SYNTHETIC_BOUNDARY_MARKER";
         var options = new AtyaProblemDetailsOptions()
             .MapError(ErrorKind.Failure, statusCode, "Server Error", "urn:test:server-error");
-        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var mapper = DefaultResultToProblemDetailsMapper.Create(options);
 
         var problemDetails = mapper.Map(
             new Error("server.error", marker),
@@ -197,7 +197,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
                 "Internal Server Error",
                 "urn:test:internal-server-error",
                 static (error, _) => error.Message);
-        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var mapper = DefaultResultToProblemDetailsMapper.Create(options);
         var error = new Error(
             extensionMarker,
             disclosedMarker,
@@ -221,7 +221,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
         const string marker = "ATYA014_SYNTHETIC_CLIENT_MARKER";
         var options = new AtyaProblemDetailsOptions()
             .MapError(ErrorKind.Failure, 499, "Client Error", "urn:test:client-error");
-        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var mapper = DefaultResultToProblemDetailsMapper.Create(options);
 
         var problemDetails = mapper.Map(
             new Error(marker, marker),
@@ -313,7 +313,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
                 "urn:test:failure",
                 static (_, _) => "Safe failure detail.");
 
-        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var mapper = DefaultResultToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var error = new Error("failure", "Hidden failure.");
 
@@ -335,7 +335,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
             CorrelationIdAccessor = static _ => " "
         };
 
-        var mapper = new DefaultResultToProblemDetailsMapper(options);
+        var mapper = DefaultResultToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var error = new Error("failure", "Failure.");
 
@@ -360,7 +360,7 @@ public sealed class DefaultResultToProblemDetailsMapperTests
 
     private static DefaultResultToProblemDetailsMapper CreateMapper()
     {
-        return new DefaultResultToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        return DefaultResultToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
     }
 
     private static DefaultHttpContext CreateHttpContext(string path)

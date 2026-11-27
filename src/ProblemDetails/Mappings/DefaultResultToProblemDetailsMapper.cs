@@ -2,9 +2,9 @@
 // Copyright (c) Atya. All rights reserved.
 // </copyright>
 
-using System.Diagnostics;
 using Atya.Errors.ProblemDetails.Abstractions;
 using Atya.Errors.ProblemDetails.Constants;
+using Atya.Errors.ProblemDetails.Internal;
 using Atya.Errors.ProblemDetails.Models;
 using Atya.Errors.ProblemDetails.Options;
 using Atya.Foundation.Guards;
@@ -20,16 +20,7 @@ namespace Atya.Errors.ProblemDetails.Mappings;
 /// </summary>
 public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetailsMapper
 {
-    private readonly AtyaProblemDetailsOptions _options;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DefaultResultToProblemDetailsMapper"/> class.
-    /// </summary>
-    /// <param name="options">The configured options.</param>
-    public DefaultResultToProblemDetailsMapper(AtyaProblemDetailsOptions options)
-    {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly ProblemDetailsPolicy _policy;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DefaultResultToProblemDetailsMapper"/> class.
@@ -37,7 +28,23 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
     /// <param name="options">The configured options accessor.</param>
     public DefaultResultToProblemDetailsMapper(IOptions<AtyaProblemDetailsOptions> options)
     {
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
+        _policy = ProblemDetailsPolicy.Create(options.Value);
+    }
+
+    private DefaultResultToProblemDetailsMapper(ProblemDetailsPolicy policy)
+    {
+        _policy = policy;
+    }
+
+    /// <summary>
+    /// Creates a mapper from an options object, for tests and manual composition.
+    /// </summary>
+    /// <param name="options">The options to snapshot.</param>
+    /// <returns>A new mapper.</returns>
+    public static DefaultResultToProblemDetailsMapper Create(AtyaProblemDetailsOptions options)
+    {
+        return new DefaultResultToProblemDetailsMapper(ProblemDetailsPolicy.Create(options));
     }
 
     /// <inheritdoc />
@@ -74,7 +81,7 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
         Guard.AgainstNull(resultError);
         Guard.AgainstNull(httpContext);
 
-        var mapping = ResolveMapping(resultError);
+        var mapping = _policy.ResolveError(resultError.Kind);
 
         var statusCode = mapping?.StatusCode ?? StatusCodes.Status422UnprocessableEntity;
         var title = mapping?.Title ?? "Unprocessable Entity";
@@ -91,19 +98,14 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
                 resultError,
                 httpContext,
                 mapping?.DetailFactory),
-            Instance = CreateInstance(httpContext),
+            Instance = ProblemDetailsPolicy.CreateInstance(httpContext),
         };
 
         AddExtensions(problemDetails, resultError, httpContext, statusCode);
 
-        return problemDetails;
-    }
+        _policy.Customize?.Invoke(new ProblemDetailsCustomizationContext(httpContext, problemDetails, exception: null, resultError));
 
-    private static string CreateInstance(HttpContext httpContext)
-    {
-        return string.IsNullOrWhiteSpace(httpContext.Request.Path.Value)
-            ? "/"
-            : httpContext.Request.Path.Value!;
+        return problemDetails;
     }
 
     private static Dictionary<string, ValidationProblemError[]> CreateValidationErrors(Error error)
@@ -149,29 +151,24 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
         }
     }
 
-    private ErrorProblemDetailsMapping? ResolveMapping(Error error)
-    {
-        return _options.ErrorMappings.FirstOrDefault(mapping => mapping.Kind == error.Kind);
-    }
-
     private void AddExtensions(
         AspNetProblemDetails problemDetails,
         Error error,
         HttpContext httpContext,
         int statusCode)
     {
-        if (_options.IncludeTraceId)
+        var names = _policy.ExtensionNames;
+
+        if (_policy.IncludeTraceId)
         {
-            var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-            AddExtension(problemDetails, _options.ExtensionNames.TraceId, traceId);
+            ProblemDetailsPolicy.AddExtension(problemDetails, names.TraceId, ProblemDetailsPolicy.ResolveTraceId(httpContext));
         }
 
-        var correlationId = _options.CorrelationIdAccessor(httpContext);
-        AddExtension(problemDetails, _options.ExtensionNames.CorrelationId, correlationId);
+        ProblemDetailsPolicy.AddExtension(problemDetails, names.CorrelationId, _policy.CorrelationIdAccessor(httpContext));
 
-        if (!ProblemDetailsDetailPolicy.IsServerError(statusCode) && _options.IncludeErrorCode)
+        if (!ProblemDetailsDetailPolicy.IsServerError(statusCode) && _policy.IncludeErrorCode)
         {
-            AddExtension(problemDetails, _options.ExtensionNames.ErrorCode, error.Code);
+            ProblemDetailsPolicy.AddExtension(problemDetails, names.ErrorCode, error.Code);
         }
 
         if (!ProblemDetailsDetailPolicy.IsServerError(statusCode))
@@ -179,19 +176,8 @@ public sealed class DefaultResultToProblemDetailsMapper : IResultToProblemDetail
             var validationErrors = CreateValidationErrors(error);
             if (validationErrors.Count > 0)
             {
-                AddExtension(problemDetails, _options.ExtensionNames.Errors, validationErrors);
-            }
-        }
-
-        static void AddExtension(AspNetProblemDetails problemDetails, string? name, object? value)
-        {
-            if (!string.IsNullOrWhiteSpace(name) &&
-                value is not null &&
-                (value is not string text || !string.IsNullOrWhiteSpace(text)))
-            {
-                problemDetails.Extensions[name.Trim()] = value;
+                ProblemDetailsPolicy.AddExtension(problemDetails, names.Errors, validationErrors);
             }
         }
     }
-
 }

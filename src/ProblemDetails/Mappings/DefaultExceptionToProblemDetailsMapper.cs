@@ -2,10 +2,10 @@
 // Copyright (c) Atya. All rights reserved.
 // </copyright>
 
-using System.Diagnostics;
 using Atya.Errors.Exceptions;
 using Atya.Errors.ProblemDetails.Abstractions;
 using Atya.Errors.ProblemDetails.Constants;
+using Atya.Errors.ProblemDetails.Internal;
 using Atya.Errors.ProblemDetails.Options;
 using Atya.Foundation.Guards;
 using Microsoft.AspNetCore.Http;
@@ -15,20 +15,12 @@ using AspNetProblemDetails = Microsoft.AspNetCore.Mvc.ProblemDetails;
 namespace Atya.Errors.ProblemDetails.Mappings;
 
 /// <summary>
-/// Default mapper from exceptions to <see cref="ProblemDetails"/>.
+/// Default mapper from exceptions to <see cref="ProblemDetails"/>. The mapper snapshots the options when it is
+/// constructed; later changes to the options object have no effect on it.
 /// </summary>
 public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblemDetailsMapper
 {
-    private readonly AtyaProblemDetailsOptions _options;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DefaultExceptionToProblemDetailsMapper"/> class.
-    /// </summary>
-    /// <param name="options">The configured options.</param>
-    public DefaultExceptionToProblemDetailsMapper(AtyaProblemDetailsOptions options)
-    {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
+    private readonly ProblemDetailsPolicy _policy;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DefaultExceptionToProblemDetailsMapper"/> class.
@@ -36,7 +28,23 @@ public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblem
     /// <param name="options">The configured options accessor.</param>
     public DefaultExceptionToProblemDetailsMapper(IOptions<AtyaProblemDetailsOptions> options)
     {
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
+        _policy = ProblemDetailsPolicy.Create(options.Value);
+    }
+
+    private DefaultExceptionToProblemDetailsMapper(ProblemDetailsPolicy policy)
+    {
+        _policy = policy;
+    }
+
+    /// <summary>
+    /// Creates a mapper from an options object, for tests and manual composition.
+    /// </summary>
+    /// <param name="options">The options to snapshot.</param>
+    /// <returns>A new mapper.</returns>
+    public static DefaultExceptionToProblemDetailsMapper Create(AtyaProblemDetailsOptions options)
+    {
+        return new DefaultExceptionToProblemDetailsMapper(ProblemDetailsPolicy.Create(options));
     }
 
     /// <inheritdoc />
@@ -45,7 +53,7 @@ public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblem
         Guard.AgainstNull(exception);
         Guard.AgainstNull(httpContext);
 
-        var mapping = ResolveMapping(exception);
+        var mapping = _policy.ResolveException(exception.GetType());
 
         var statusCode = mapping?.StatusCode ?? StatusCodes.Status500InternalServerError;
         var title = mapping?.Title ?? "Internal Server Error";
@@ -57,7 +65,7 @@ public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblem
             exception,
             httpContext,
             mapping?.DetailFactory,
-            _options.IncludeExceptionDetailsPredicate);
+            _policy.IncludeExceptionDetailsPredicate);
 
         var problemDetails = new AspNetProblemDetails
         {
@@ -65,82 +73,55 @@ public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblem
             Title = title,
             Type = type,
             Detail = detail,
-            Instance = CreateInstance(httpContext),
+            Instance = ProblemDetailsPolicy.CreateInstance(httpContext),
         };
 
         AddExtensions(problemDetails, exception, httpContext);
 
-        _options.CustomizeProblemDetails?.Invoke(httpContext, exception, problemDetails);
+        _policy.Customize?.Invoke(new ProblemDetailsCustomizationContext(httpContext, problemDetails, exception, error: null));
+        _policy.LegacyCustomize?.Invoke(httpContext, exception, problemDetails);
 
         return problemDetails;
     }
 
-    private static string CreateInstance(HttpContext httpContext)
-    {
-        return string.IsNullOrWhiteSpace(httpContext.Request.Path.Value)
-            ? "/"
-            : httpContext.Request.Path.Value!;
-    }
-
-    private ExceptionProblemDetailsMapping? ResolveMapping(Exception exception)
-    {
-        var exceptionType = exception.GetType();
-
-        var exactMatch = _options.Mappings.FirstOrDefault(mapping => mapping.ExceptionType == exceptionType);
-        if (exactMatch is not null)
-        {
-            return exactMatch;
-        }
-
-        return _options.Mappings.FirstOrDefault(mapping => mapping.ExceptionType.IsAssignableFrom(exceptionType));
-    }
-
     private void AddExtensions(AspNetProblemDetails problemDetails, Exception exception, HttpContext httpContext)
     {
-        if (_options.IncludeTraceId)
+        var names = _policy.ExtensionNames;
+
+        if (_policy.IncludeTraceId)
         {
-            var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-            AddExtension(problemDetails, _options.ExtensionNames.TraceId, traceId);
+            ProblemDetailsPolicy.AddExtension(problemDetails, names.TraceId, ProblemDetailsPolicy.ResolveTraceId(httpContext));
         }
 
-        var correlationId = _options.CorrelationIdAccessor(httpContext);
-        AddExtension(problemDetails, _options.ExtensionNames.CorrelationId, correlationId);
+        ProblemDetailsPolicy.AddExtension(problemDetails, names.CorrelationId, _policy.CorrelationIdAccessor(httpContext));
 
-        if (_options.IncludeErrorCode &&
+        if (_policy.IncludeErrorCode &&
             exception is AtyaException atyaException &&
             !string.IsNullOrWhiteSpace(atyaException.ErrorCode))
         {
-            AddExtension(problemDetails, _options.ExtensionNames.ErrorCode, atyaException.ErrorCode);
+            ProblemDetailsPolicy.AddExtension(problemDetails, names.ErrorCode, atyaException.ErrorCode);
         }
 
-        if (_options.IncludeExceptionMetadata &&
+        if (_policy.IncludeExceptionMetadata &&
             exception is AtyaException exceptionWithMetadata &&
             exceptionWithMetadata.Metadata.Count > 0)
         {
-            AddExtension(
+            ProblemDetailsPolicy.AddExtension(
                 problemDetails,
-                _options.ExtensionNames.Metadata,
+                names.Metadata,
                 new Dictionary<string, object?>(exceptionWithMetadata.Metadata, StringComparer.Ordinal));
         }
 
         if (exception is ValidationException validationException)
         {
-            AddExtension(problemDetails, _options.ExtensionNames.Errors, CreateValidationErrors(validationException));
-        }
-
-        static void AddExtension(AspNetProblemDetails problemDetails, string? name, object? value)
-        {
-            if (!string.IsNullOrWhiteSpace(name) &&
-                value is not null &&
-                (value is not string text || !string.IsNullOrWhiteSpace(text)))
-            {
-                problemDetails.Extensions[name.Trim()] = value;
-            }
+            ProblemDetailsPolicy.AddExtension(problemDetails, names.Errors, CreateValidationErrors(validationException));
         }
     }
 
     private Dictionary<string, object?>[] CreateValidationErrors(ValidationException validationException)
     {
+        var names = _policy.ExtensionNames;
+
         static void AddValidationMember(Dictionary<string, object?> item, string? name, object? value)
         {
             if (!string.IsNullOrWhiteSpace(name))
@@ -154,13 +135,13 @@ public sealed class DefaultExceptionToProblemDetailsMapper : IExceptionToProblem
             {
                 Dictionary<string, object?> item = new(StringComparer.Ordinal);
 
-                AddValidationMember(item, _options.ExtensionNames.ValidationPropertyName, error.PropertyName);
-                AddValidationMember(item, _options.ExtensionNames.ValidationMessage, error.Message);
-                AddValidationMember(item, _options.ExtensionNames.ValidationErrorCode, error.ErrorCode);
+                AddValidationMember(item, names.ValidationPropertyName, error.PropertyName);
+                AddValidationMember(item, names.ValidationMessage, error.Message);
+                AddValidationMember(item, names.ValidationErrorCode, error.ErrorCode);
 
-                if (_options.IncludeValidationAttemptedValues)
+                if (_policy.IncludeValidationAttemptedValues)
                 {
-                    AddValidationMember(item, _options.ExtensionNames.ValidationAttemptedValue, error.AttemptedValue);
+                    AddValidationMember(item, names.ValidationAttemptedValue, error.AttemptedValue);
                 }
 
                 return item;

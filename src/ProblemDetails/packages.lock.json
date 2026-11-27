@@ -13,15 +13,15 @@
       },
       "Atya.Foundation.Guards": {
         "type": "Direct",
-        "requested": "[1.0.0, )",
-        "resolved": "1.0.0",
-        "contentHash": "hLGlr7iPEAVMFEzNf2yGxEuJld/UGwBuC16TGyw3EGYrTQYf1ub3y24eoiFB4BGLQQDw1ll9hPoAdgVdJQEifQ=="
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "AKdLrehqfdZjwgSzm3TkeOChzL934l28eraXaYyJEN3VNopVWa7/cVRAwFY7bs4UbwmnReYyczCnzM5mrVZQag=="
       },
       "Atya.Foundation.Results": {
         "type": "Direct",
-        "requested": "[1.1.0, )",
-        "resolved": "1.1.0",
-        "contentHash": "7u4kPGnVubYn10agEOOxfMbN6GRLXpdtAMSCcCDvnNhSx4tdhrdrNf2AXKdNX+GP0Ekm6PSTsWlHMuZYMdFUYQ=="
+        "requested": "[1.2.0, )",
+        "resolved": "1.2.0",
+        "contentHash": "S8JCIj89tHgzbRP76QRQBkLuBROi6CtfGAUzAg6+xuDsKURvzYblR1I40a8wmVWj4byVI8ixmF6PFKlvz6/hrA=="
       },
       "Atya.Governance.CodeQuality": {
         "type": "Direct",

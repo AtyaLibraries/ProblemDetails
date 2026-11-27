@@ -23,7 +23,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             IncludeErrorCode = false
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new NotFoundException("Customer was not found.", "customer.not_found");
 
@@ -40,7 +40,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             IncludeTraceId = false
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new NotFoundException("Customer was not found.");
 
@@ -52,7 +52,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
     [Fact]
     public void Map_Should_Not_Add_TraceId_When_TraceIdentifier_Is_Blank()
     {
-        var mapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
         var httpContext = CreateHttpContext("/customers");
         httpContext.TraceIdentifier = string.Empty;
         var exception = new NotFoundException("Customer was not found.");
@@ -63,16 +63,18 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
     }
 
     [Fact]
-    public void Map_Should_Use_Current_Activity_Id_When_Available()
+    public void Map_Should_Use_Current_Activity_TraceId_When_Available()
     {
-        using var activity = new Activity("ProblemDetails.UnitTests").Start();
-        var mapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        using var activity = new Activity("ProblemDetails.UnitTests");
+        activity.SetIdFormat(ActivityIdFormat.W3C);
+        activity.Start();
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
         var httpContext = CreateHttpContext("/customers");
         var exception = new NotFoundException("Customer was not found.");
 
         var result = mapper.Map(exception, httpContext);
 
-        result.Extensions[ProblemDetailsExtensionNames.TraceId].Should().Be(activity.Id);
+        result.Extensions[ProblemDetailsExtensionNames.TraceId].Should().Be(activity.TraceId.ToString());
     }
 
     [Fact]
@@ -83,7 +85,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             IncludeExceptionMetadata = false
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
 
         var exception = new ConflictException(
@@ -102,7 +104,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
     [Fact]
     public void Map_Should_Not_Add_ErrorCode_When_Atya_Exception_ErrorCode_Is_Null()
     {
-        var mapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
         var httpContext = CreateHttpContext("/customers");
         var exception = new NotFoundException("Customer was not found.", errorCode: null);
 
@@ -120,7 +122,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             IncludeExceptionDetailsPredicate = static (_, _) => true
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new InvalidOperationException("Unexpected failure.");
 
@@ -137,7 +139,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             IncludeExceptionMetadata = true
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new NotFoundException("Customer was not found.");
 
@@ -155,7 +157,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             CorrelationIdAccessor = _ => correlationIdAccessor.CorrelationId,
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ConflictException("Conflict.");
 
@@ -167,7 +169,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
     [Fact]
     public void Map_Should_Sanitize_Known_Handled_500_Exception_By_Default()
     {
-        var mapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
         var httpContext = CreateHttpContext("/infrastructure");
         var exception = new InfrastructureException("Database timeout.");
 
@@ -186,7 +188,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             IncludeExceptionDetailsPredicate = static (_, _) => true
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/infrastructure");
         var exception = new InfrastructureException("Database timeout.");
 
@@ -203,7 +205,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
             IncludeValidationAttemptedValues = true
         };
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ValidationException(
             "Validation failed.",
@@ -238,7 +240,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
         options.ExtensionNames.ValidationErrorCode = "rule";
         options.ExtensionNames.ValidationAttemptedValue = "value";
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ValidationException(
             "Validation failed.",
@@ -281,7 +283,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
         options.ExtensionNames.Metadata = null;
         options.ExtensionNames.Errors = null;
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ValidationException(
             "Validation failed.",
@@ -309,7 +311,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
         options.ExtensionNames.ValidationErrorCode = null;
         options.ExtensionNames.ValidationAttemptedValue = null;
 
-        var mapper = new DefaultExceptionToProblemDetailsMapper(options);
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(options);
         var httpContext = CreateHttpContext("/customers");
         var exception = new ValidationException(
             "Validation failed.",
@@ -327,7 +329,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
     [Fact]
     public void Map_Should_Use_Base_Exception_Mapping_For_Derived_Exception()
     {
-        var mapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
         var httpContext = CreateHttpContext("/customers");
         var exception = new CustomNotFoundException("Derived not found.");
 
@@ -342,7 +344,7 @@ public sealed class DefaultExceptionToProblemDetailsMapperAdditionalTests
     [Fact]
     public void Map_Should_Use_Root_Path_When_Request_Path_Is_Empty()
     {
-        var mapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
+        var mapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
         var httpContext = new DefaultHttpContext
         {
             TraceIdentifier = "trace-123"

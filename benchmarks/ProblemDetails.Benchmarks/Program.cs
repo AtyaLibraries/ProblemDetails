@@ -50,8 +50,8 @@ public class KnownExceptionMappingBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _defaultMapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
-        _metadataMapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions
+        _defaultMapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
+        _metadataMapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions
         {
             IncludeExceptionMetadata = true,
             IncludeValidationAttemptedValues = true
@@ -154,8 +154,8 @@ public class UnhandledExceptionMappingBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        _sanitizedMapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions());
-        _detailsMapper = new DefaultExceptionToProblemDetailsMapper(new AtyaProblemDetailsOptions
+        _sanitizedMapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions());
+        _detailsMapper = DefaultExceptionToProblemDetailsMapper.Create(new AtyaProblemDetailsOptions
         {
             IncludeExceptionDetailsPredicate = static (_, _) => true
         });
